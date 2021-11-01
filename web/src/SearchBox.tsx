@@ -24,7 +24,7 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ minisearches }) =>
       return
     }
     setResults(minisearches
-        .flatMap((ms) => ms.search(criteria))
+        .flatMap((ms) => ms.search(criteria, { fuzzy: 0.2 }))
         .sort((r1, r2) => - (r1.score - r2.score))
         .slice(0, 10)
         .map((searchResult) => {
