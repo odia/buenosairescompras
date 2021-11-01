@@ -46,6 +46,8 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ minisearches }) =>
         {results.map((r) => (
           <tr key={r.searchResult.id}>
             <td><a href={r.searchResult.id} target="_blank" rel="noreferrer">{r.searchResult['tender/description']}</a></td>
+            <td>{r.searchResult['tender/title']}</td>
+            <td>{r.searchResult['tender/description']}</td>
             <td><Highlights highlights={r.highlights} /></td>
           </tr>
         ))}
