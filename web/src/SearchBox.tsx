@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import MiniSearch, { SearchResult } from 'minisearch'
-const { decompress } = require('lz-string')
+import { decompress } from 'lz-string'
+import { fuzzyMatch } from 'fuzzbunny'
+import Highlights from './Highlights'
 
 export interface SearchBoxProps {
   minisearches: MiniSearch[]
 }
 
+interface ExtendedSearchResult {
+  searchResult: SearchResult
+  text: string
+  highlights: string[]
+}
+
 const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ minisearches }) => {
   const [criteria, setCriteria] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
+  const [results, setResults] = useState<ExtendedSearchResult[]>([])
 
   useEffect(() => {
     if (criteria.length < 3) {
@@ -19,7 +27,16 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ minisearches }) =>
         .flatMap((ms) => ms.search(criteria))
         .sort((r1, r2) => - (r1.score - r2.score))
         .slice(0, 10)
-        )
+        .map((searchResult) => {
+          const text = decompress(searchResult.compressed) || ''
+          const match = fuzzyMatch(text, criteria)
+          const highlights = match ? match.highlights: []
+          return {
+            searchResult,
+            text,
+            highlights,
+          }
+        }))
   }, [criteria, minisearches])
 
   return (
@@ -27,9 +44,9 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ minisearches }) =>
       <input type="text" value={criteria} onChange={(e) => setCriteria(e.target.value)} />
       {results.length > 0 && (<table>
         {results.map((r) => (
-          <tr key={r.id}>
-            <td><a href={r.id} target="_blank" rel="noreferrer">{r['tender/description']}</a></td>
-            <td>{ decompress(r.compressed) }</td>
+          <tr key={r.searchResult.id}>
+            <td><a href={r.searchResult.id} target="_blank" rel="noreferrer">{r.searchResult['tender/description']}</a></td>
+            <td><Highlights highlights={r.highlights} /></td>
           </tr>
         ))}
       </table>)}
