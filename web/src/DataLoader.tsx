@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import MiniSearch from 'minisearch'
 import fetchProgress from 'fetch-progress'
 
@@ -41,8 +41,12 @@ const range = function(from: number, to: number) {
 const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
   const [minisearches, setMinisearches] = useState<MiniSearch[]>([])
   const [progress, setProgress] = useState<number>()
+  const [loading, setLoading] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
+    if (loading) return;
+    setLoading(true);
+
     (async () => {
       const totalRequestsSize = range(0, NUM_MINISEARCH).map(() => 0)
       const requestsTransferredSize = range(0, NUM_MINISEARCH).map(() => 0)
@@ -60,7 +64,7 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
           // appending range header to get number of bytes
           // since chunked transfer encoding does not return content length
           headers.append("Range", "bytes=0-" + (100 * 1024 * 1024));
-          let request = new Request(`/data/index${i}.json`, {headers:headers});
+          let request = new Request(`/data/index${i}.json`, {headers});
           return fetch(request)
             .then((r) => {
               const range = r.headers.get('content-range')
@@ -92,7 +96,7 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
         )
       )
     })()
-  })
+  }, [loading])
 
   return (
     <>
