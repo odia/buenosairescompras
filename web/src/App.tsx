@@ -1,9 +1,10 @@
 import React from 'react';
 
+import DataLoader from './DataLoader'
+
 function App() {
   return (
-    <div className="App">
-    </div>
+    <DataLoader />
   );
 }
 
