@@ -17,6 +17,12 @@ const minisearches = [...range(0, NUM_MINISEARCH)].map(() => new MiniSearch(MS_C
 const urls = []
 let buffer = []
 let i = 0
+const addDocuments = () => {
+  minisearches[i++ % NUM_MINISEARCH].addAll(buffer)
+  buffer = []
+  process.stderr.write(`writing to bucket ${i}\n`)
+}
+
 fs.createReadStream(PATH)
   .pipe(csvparse({ columns: true }))
   .on('error', console.error)
@@ -35,13 +41,19 @@ fs.createReadStream(PATH)
     doc.compressed = compress(doc.content)
     buffer.push(doc)
     if (buffer.length === BUFFER_SIZE) {
-        minisearches[i++ % NUM_MINISEARCH].addAll(buffer)
-        buffer = []
-        process.stderr.write(`writing to bucket ${i}\n`)
+      addDocuments()
     }
   })
   .on('end', async () => {
+    addDocuments()
+    const sizes = []
     await Promise.all(minisearches.map(async (ms, i) => {
-      await fs.promises.writeFile(`../data/index${i}.json`, JSON.stringify(ms.toJSON()))
+      const str = JSON.stringify(ms.toJSON())
+      sizes.push(str.length)
+      await fs.promises.writeFile(`../data/index${i}.json`, str)
     }))
+    await fs.promises.writeFile(`../data/index.json`, JSON.stringify(sizes.map((size, i) => ({
+      url: `index${i}.json`,
+      size,
+    }))))
   })
