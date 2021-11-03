@@ -1,35 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import MiniSearch from 'minisearch'
 import fetchProgress from 'fetch-progress'
+import { MS_CONFIG, NUM_MINISEARCH } from 'bac-shared'
 
 import Loading from './Loading'
 import SearchBox from './SearchBox'
 
 export interface DataLoaderProps {
-}
-
-// FIXME: shared with create-index
-const NUM_MINISEARCH = 10
-const COLS = [
-  'tender/title',
-  'tender/description',
-  'tender/status',
-  'tender/value/currency',
-  'tender/value/amount',
-  'tender/procuringEntity/name',
-  'tender/procurementMethodDetails',
-  'tender/mainProcurementCategory',
-  'tender/tenderPeriod/startDate',
-  'tender/tenderPeriod/endDate',
-  'tender/tenderPeriod/durationInDays',
-  'tender/enquiryPeriod/startDate',
-  'tender/enquiryPeriod/endDate',
-  'tender/enquiryPeriod/durationInDays',
-  'tender/documents/0/url',
-]
-const MS_CONFIG = {
-  fields: ['content'],
-  storeFields: COLS.concat(['compressed']),
 }
 
 const range = function(from: number, to: number) {

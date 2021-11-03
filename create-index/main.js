@@ -4,35 +4,13 @@ const assert = require('assert')
 const htmlparse = require('node-html-parser').parse;
 const { compress } = require('lz-string')
 const MiniSearch = require('minisearch')
-
-const COLS = [
-  'tender/title',
-  'tender/description',
-  'tender/status',
-  'tender/value/currency',
-  'tender/value/amount',
-  'tender/procuringEntity/name',
-  'tender/procurementMethodDetails',
-  'tender/mainProcurementCategory',
-  'tender/tenderPeriod/startDate',
-  'tender/tenderPeriod/endDate',
-  'tender/tenderPeriod/durationInDays',
-  'tender/enquiryPeriod/startDate',
-  'tender/enquiryPeriod/endDate',
-  'tender/enquiryPeriod/durationInDays',
-  'tender/documents/0/url',
-]
+const { MS_CONFIG, COLS, NUM_MINISEARCH } = require('bac-shared')
 
 const range = function*(from,to) {
     for(let i = from; i <= to; i++) yield i;
 };
 
-const MS_CONFIG = {
-  fields: ['content'],
-  storeFields: COLS.concat(['compressed']),
-}
 const BUFFER_SIZE = 1000;
-const NUM_MINISEARCH = 10
 const PATH = '../data/releases_documents_items.csv' // '../data/sample.csv'
 const minisearches = [...range(0, NUM_MINISEARCH)].map(() => new MiniSearch(MS_CONFIG))
 
