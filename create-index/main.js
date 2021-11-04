@@ -11,7 +11,7 @@ const range = function*(from,to) {
 };
 
 const BUFFER_SIZE = 1000;
-const PATH = '../data/releases_documents_items.csv' // '../data/sample.csv'
+const PATH = process.argv[2] === 'sample' ? '../data/sample.csv' : '../data/releases_documents_items.csv'
 const minisearches = [...range(0, NUM_MINISEARCH)].map(() => new MiniSearch(MS_CONFIG))
 
 const urls = []
