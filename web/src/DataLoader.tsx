@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import MiniSearch from 'minisearch'
-import fetchProgress from 'fetch-progress'
-import { MS_CONFIG, NUM_MINISEARCH } from 'bac-shared'
 
 import Loading from './Loading'
 import SearchBox from './SearchBox'
+import { MS_CONFIG } from 'bac-shared'
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import worker from 'workerize-loader!./worker'
 
 export interface DataLoaderProps {
 }
-
-const range = function(from: number, to: number) {
-    const arr = []
-    for(let i = from; i <= to; i++) arr.push(i)
-    return arr
-};
 
 const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
   const [minisearches, setMinisearches] = useState<MiniSearch[]>([])
@@ -32,47 +27,21 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
     if (loading) return;
     setLoading(true);
 
-    (async () => {
-      let totalRequestsSize: number[] = [];
-      const requestsTransferredSize = range(0, NUM_MINISEARCH).map(() => 0)
-      const addError = (err: string) => {
-        console.error(err)
-        setFailed(true)
+    let instance = worker()
+    instance.addEventListener("message", ({ data }) => {
+      // I don't know why `const [t, params] = data` does not work
+      const [t, params] = [data[0], data[1]]
+      if (!t) return
+      switch (t) {
+        case 'setFailed': setFailed(params); break
+        case 'setProgress': setProgress(params); break
+        default: console.error('unexpected message type: ' + t); break
       }
-      const updateProgress = () => {
-        setProgress(
-          requestsTransferredSize.reduce((a, b) => a + b, 0) /
-          totalRequestsSize.reduce((a, b) => a + b, 0)
-        )
-      }
-
-      fetch("/data/index.json")
-        .then((res) => res.json())
-        .then(async (data: {url: string, size: number}[]) => {
-          totalRequestsSize = data.map((x) => x.size)
-          setMinisearches(await Promise.all(
-            data.map((x, i) => fetch('/data/' + x.url)
-              .then(fetchProgress({
-                onProgress(progress) {
-                  requestsTransferredSize[i] = progress.transferred
-                  updateProgress()
-                },
-                onError(err) {
-                  addError(err);
-                },
-            }))
-            .then((res) => res.blob())
-            .then(async (blob) => {
-              requestsTransferredSize[i] = blob.size
-              updateProgress()
-              return MiniSearch.loadJSON(await blob.text(), MS_CONFIG)
-            })
-            .catch((err) => addError(err))
-          )
-        ))
-      })
-      .catch((err) => addError(err))
-    })()
+    })
+     
+    instance.getMiniSearchJSON().then((json) => {
+      setMinisearches(json.map((j) => MiniSearch.loadJS(j, MS_CONFIG)))
+    })
   }, [loading])
 
   return (
