@@ -19,6 +19,14 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
   const [minisearches, setMinisearches] = useState<MiniSearch[]>([])
   const [progress, setProgress] = useState<number>()
   const [loading, setLoading] = useState(false)
+  const [failed, setFailed] = useState(false)
+
+  const retry = () => {
+    setMinisearches([])
+    setProgress(0)
+    setFailed(false)
+    setLoading(false)
+  }
 
   useEffect(() => {
     if (loading) return;
@@ -27,6 +35,10 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
     (async () => {
       let totalRequestsSize: number[] = [];
       const requestsTransferredSize = range(0, NUM_MINISEARCH).map(() => 0)
+      const addError = (err: string) => {
+        console.error(err)
+        setFailed(true)
+      }
       const updateProgress = () => {
         setProgress(
           requestsTransferredSize.reduce((a, b) => a + b, 0) /
@@ -46,25 +58,34 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
                   updateProgress()
                 },
                 onError(err) {
-                  // TODO: handle error
-                  console.error(err);
+                  addError(err);
                 },
-              }))
+            }))
             .then((res) => res.blob())
             .then(async (blob) => {
               requestsTransferredSize[i] = blob.size
               updateProgress()
               return MiniSearch.loadJSON(await blob.text(), MS_CONFIG)
-              })
-            )
-          ))
-        })
+            })
+            .catch((err) => addError(err))
+          )
+        ))
+      })
+      .catch((err) => addError(err))
     })()
   }, [loading])
 
   return (
     <>
-      {minisearches.length === 0 ? <Loading progress={progress} /> : <SearchBox minisearches={minisearches} />}
+      {failed ?
+        (
+          <p>
+            Falló la descarga
+            <button onClick={() => retry()}>Reintentar</button>
+          </p>
+        ) :
+        (minisearches.length === 0 ? <Loading text={progress === 1 ? 'Preparing...' : 'Downloading...'} progress={progress} /> : <SearchBox minisearches={minisearches} />)
+      }
     </>
   )
 }
