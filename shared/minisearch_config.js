@@ -18,7 +18,7 @@ const COLS = [
 ]
 
 const MS_CONFIG = {
-  fields: ['content'],
+  fields: ['tender/title', 'tender/description', 'content'],
   storeFields: COLS.concat(['compressed']),
 }
 module.exports = { MS_CONFIG, COLS, NUM_MINISEARCH }

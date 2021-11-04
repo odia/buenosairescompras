@@ -84,7 +84,14 @@ export async function search(criteria) {
     if (criteria !== searchingCriteria) {
       return
     }
-    searchResultsRaw.push(await searchAsync(minisearches[i], criteria, { fuzzy: 0.2 }))
+    searchResultsRaw.push(await searchAsync(minisearches[i], criteria, {
+      fuzzy: 0.2,
+      boost: {
+        'tender/title': 3,
+        'tender/description': 2,
+      },
+      combineWith: 'AND',
+    }))
   }
   const searchResultsSorted = searchResultsRaw
     .flat()
