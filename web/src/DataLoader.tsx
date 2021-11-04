@@ -26,18 +26,10 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
 
   useEffect(() => {
     if (workerInstance) return
-    setWorkerInstance(worker())
-  }, [workerInstance])
+    const w = worker()
+    setWorkerInstance(w)
 
-  const setCriteria = async (criteria: string) => {
-    setSearchResults(await workerInstance.search(criteria))
-  }
-
-  useEffect(() => {
-    if (loading || !workerInstance) return;
-    setLoading(true);
-
-    workerInstance.addEventListener("message", ({ data }) => {
+    w.addEventListener("message", ({ data }) => {
       // I don't know why `const [t, params] = data` does not work
       const [t, params] = [data[0], data[1]]
       if (!t) return
@@ -45,9 +37,19 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
         case 'setFailed': setFailed(params); break
         case 'setProgress': setProgress(params); break
         case 'setReady': setReady(params); break
+        case 'setSearchResults': setSearchResults(params); break
         default: console.error('unexpected message type: ' + t); break
       }
     })
+  }, [workerInstance])
+
+  const setCriteria = (criteria: string) => {
+    workerInstance.search(criteria)
+  }
+
+  useEffect(() => {
+    if (loading || !workerInstance) return;
+    setLoading(true);
 
     workerInstance.init()
   }, [loading, workerInstance])

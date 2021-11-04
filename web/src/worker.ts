@@ -55,20 +55,53 @@ export async function init(f) {
     global.self.postMessage(['setReady', true])
 }
 
+let searchingCriteria = ''
+const searchAsync = (ms: MiniSearch, criteria: string, options: any) => {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(ms.search(criteria, options)))
+  })
+}
+
+const prepareSearchResults = (searchResult, criteria: string) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const text = decompress(searchResult.compressed) || ''
+      const match = fuzzyMatch(text, criteria)
+      const highlights = match ? match.highlights: []
+      resolve({
+        searchResult,
+        text,
+        highlights,
+      })
+    })
+  })
+}
 
 export async function search(criteria) {
-  return minisearches
-      .flatMap((ms) => ms.search(criteria, { fuzzy: 0.2 }))
-      .sort((r1, r2) => - (r1.score - r2.score))
-      .slice(0, 10)
-      .map((searchResult) => {
-        const text = decompress(searchResult.compressed) || ''
-        const match = fuzzyMatch(text, criteria)
-        const highlights = match ? match.highlights: []
-        return {
-          searchResult,
-          text,
-          highlights,
-        }
-      })
+  searchingCriteria = criteria
+  const searchResultsRaw = []
+  for (let i = 0; i < minisearches.length; i++) {
+    if (criteria !== searchingCriteria) {
+      return
+    }
+    searchResultsRaw.push(await searchAsync(minisearches[i], criteria, { fuzzy: 0.2 }))
+  }
+  const searchResultsSorted = searchResultsRaw
+    .flat()
+    .sort((r1, r2) => - (r1.score - r2.score))
+    .slice(0, 10)
+
+  const searchResults = []
+  for (let i = 0; i < searchResultsSorted.length; i++) {
+    if (criteria !== searchingCriteria) {
+      return
+    }
+    searchResults.push(await prepareSearchResults(searchResultsSorted[i]))
+  }
+  setTimeout(() => {
+    if (criteria !== searchingCriteria) {
+      return;
+    }
+    global.self.postMessage(['setSearchResults', searchResults])
+  })
 }
