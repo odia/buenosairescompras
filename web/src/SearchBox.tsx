@@ -26,7 +26,7 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ searchResults, sea
   return (
     <>
       <input type="text" value={criteria} onChange={(e) => setCriteria(e.target.value)} />
-      {searchResults.length > 0 && (<table>
+      {searchResults.length > 0 && (<table><tbody>
         {searchResults.map((r) => (
           <tr key={r.searchResult.id}>
             <td><a href={r.searchResult.id} target="_blank" rel="noreferrer">{r.searchResult['tender/description']}</a></td>
@@ -35,7 +35,7 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ searchResults, sea
             <td><Highlights highlights={r.highlights} /></td>
           </tr>
         ))}
-      </table>)}
+      </tbody></table>)}
     </>
   )
 }
