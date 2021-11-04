@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import MiniSearch, { SearchResult } from 'minisearch'
-import { decompress } from 'lz-string'
-import { fuzzyMatch } from 'fuzzbunny'
+import { SearchResult } from 'minisearch'
 import Highlights from './Highlights'
 
 export interface SearchBoxProps {
-  minisearches: MiniSearch[]
+  searchResults: ExtendedSearchResult[]
+  search: (s: string) => void
 }
 
 interface ExtendedSearchResult {
@@ -14,36 +13,21 @@ interface ExtendedSearchResult {
   highlights: string[]
 }
 
-const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ minisearches }) => {
+const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ searchResults, search }) => {
   const [criteria, setCriteria] = useState('')
-  const [results, setResults] = useState<ExtendedSearchResult[]>([])
 
   useEffect(() => {
     if (criteria.length < 3) {
-      setResults([])
       return
     }
-    setResults(minisearches
-        .flatMap((ms) => ms.search(criteria, { fuzzy: 0.2 }))
-        .sort((r1, r2) => - (r1.score - r2.score))
-        .slice(0, 10)
-        .map((searchResult) => {
-          const text = decompress(searchResult.compressed) || ''
-          const match = fuzzyMatch(text, criteria)
-          const highlights = match ? match.highlights: []
-          return {
-            searchResult,
-            text,
-            highlights,
-          }
-        }))
-  }, [criteria, minisearches])
+    search(criteria)
+  }, [criteria, search])
 
   return (
     <>
       <input type="text" value={criteria} onChange={(e) => setCriteria(e.target.value)} />
-      {results.length > 0 && (<table>
-        {results.map((r) => (
+      {searchResults.length > 0 && (<table>
+        {searchResults.map((r) => (
           <tr key={r.searchResult.id}>
             <td><a href={r.searchResult.id} target="_blank" rel="noreferrer">{r.searchResult['tender/description']}</a></td>
             <td>{r.searchResult['tender/title']}</td>

@@ -1,5 +1,10 @@
 import fetchProgress from 'fetch-progress'
-import { NUM_MINISEARCH } from 'bac-shared'
+import { NUM_MINISEARCH, MS_CONFIG } from 'bac-shared'
+import MiniSearch from 'minisearch'
+import { decompress } from 'lz-string'
+import { fuzzyMatch } from 'fuzzbunny'
+
+const minisearches = []
 
 const range = function(from: number, to: number) {
     const arr = []
@@ -7,23 +12,21 @@ const range = function(from: number, to: number) {
     return arr
 };
 
-export async function getMiniSearchJSON(f) {
+export async function init(f) {
     let totalRequestsSize: number[] = [];
     const requestsTransferredSize = range(0, NUM_MINISEARCH).map(() => 0)
     const addError = (err: string) => {
       console.error(err)
-      // eslint-disable-next-line no-restricted-globals
-      self.postMessage(['setFailed', true])
+      global.self.postMessage(['setFailed', true])
     }
     const updateProgress = () => {
-      // eslint-disable-next-line no-restricted-globals
-      self.postMessage(['setProgress', (
+      global.self.postMessage(['setProgress', (
         requestsTransferredSize.reduce((a, b) => a + b, 0) /
         totalRequestsSize.reduce((a, b) => a + b, 0)
       )])
     }
 
-    return await fetch("/data/index.json")
+    await fetch("/data/index.json")
       .then((res) => res.json())
       .then(async (data: {url: string, size: number}[]) => {
         totalRequestsSize = data.map((x) => x.size)
@@ -42,11 +45,30 @@ export async function getMiniSearchJSON(f) {
           .then(async (json) => {
             requestsTransferredSize[i] = totalRequestsSize[i]
             updateProgress()
-            return json
+            minisearches[i] = MiniSearch.loadJS(json, MS_CONFIG)
           })
           .catch((err) => addError(err))
         )
       )
     })
     .catch((err) => addError(err))
+    global.self.postMessage(['setReady', true])
+}
+
+
+export async function search(criteria) {
+  return minisearches
+      .flatMap((ms) => ms.search(criteria, { fuzzy: 0.2 }))
+      .sort((r1, r2) => - (r1.score - r2.score))
+      .slice(0, 10)
+      .map((searchResult) => {
+        const text = decompress(searchResult.compressed) || ''
+        const match = fuzzyMatch(text, criteria)
+        const highlights = match ? match.highlights: []
+        return {
+          searchResult,
+          text,
+          highlights,
+        }
+      })
 }
