@@ -32,6 +32,10 @@ const SearchBox: React.FunctionComponent<SearchBoxProps> = ({ searchResults, sea
             <td><a href={r.searchResult.id} target="_blank" rel="noreferrer">{r.searchResult['tender/description']}</a></td>
             <td>{r.searchResult['tender/title']}</td>
             <td>{r.searchResult['tender/description']}</td>
+            <td>
+              {r.searchResult['tender/value/currency']}
+              {r.searchResult['tender/value/amount']}
+            </td>
             <td><Highlights highlights={r.highlights} /></td>
           </tr>
         ))}
