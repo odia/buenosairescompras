@@ -49,7 +49,9 @@
   },
   "devDependencies": {
     "@types/lz-string": "^1.3.34",
+    "customize-cra": "^1.0.0",
     "gh-pages": "^3.2.3",
+    "react-app-rewired": "^2.1.8",
     "workerize-loader": "^1.3.0"
   }
 }

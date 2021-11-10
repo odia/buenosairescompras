@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import Loading from './Loading'
 import SearchBox from './SearchBox'
 // eslint-disable-next-line import/no-webpack-loader-syntax
-import worker from 'workerize-loader!./worker'
+import Worker from 'workerize-loader!./search.worker'
 
 export interface DataLoaderProps {
 }
@@ -17,7 +17,6 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
   const [searchResults, setSearchResults] = useState([])
 
   const retry = () => {
-    setMinisearches([])
     setProgress(0)
     setFailed(false)
     setLoading(false)
@@ -26,7 +25,7 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
 
   useEffect(() => {
     if (workerInstance) return
-    const w = worker()
+    const w = new Worker()
     setWorkerInstance(w)
 
     w.addEventListener("message", ({ data }) => {
