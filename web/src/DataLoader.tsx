@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import Loading from './Loading'
 import SearchBox from './SearchBox'
 // eslint-disable-next-line import/no-webpack-loader-syntax
-import Worker from 'workerize-loader!./search.worker'
+const Worker = require('workerize-loader!./search.worker')
 
 export interface DataLoaderProps {
 }
@@ -13,8 +13,9 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState(false)
   const [ready, setReady] = useState(false)
-  const [workerInstance, setWorkerInstance] = useState(null)
+  const [workerInstance, setWorkerInstance] = useState<any | null>(null)
   const [searchResults, setSearchResults] = useState([])
+  const [criteria, setCriteria] = useState("")
 
   const retry = () => {
     setProgress(0)
@@ -28,7 +29,7 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
     const w = new Worker()
     setWorkerInstance(w)
 
-    w.addEventListener("message", ({ data }) => {
+    w.addEventListener("message", ({ data }: any) => {
       // I don't know why `const [t, params] = data` does not work
       const [t, params] = [data[0], data[1]]
       if (!t) return
@@ -42,9 +43,9 @@ const DataLoader : React.FunctionComponent<DataLoaderProps> = () => {
     })
   }, [workerInstance])
 
-  const setCriteria = (criteria: string) => {
-    workerInstance.search(criteria)
-  }
+  useEffect(() => {
+    workerInstance?.search(criteria)
+  }, [criteria, workerInstance]);
 
   useEffect(() => {
     if (loading || !workerInstance) return;
