@@ -36,8 +36,9 @@ fs.createReadStream(PATH)
     const html = fs.readFileSync(f, 'utf8')
     const dom = htmlparse(html)
     const relevant = dom.querySelector('div#divImprimir')
+    dom.querySelectorAll('script').forEach((s) => s.remove())
     doc.id = doc['tender/documents/0/url']
-    doc.content = relevant ? relevant.text.toString() : ''
+    doc.content = relevant ? relevant.text.toString().replace(/\s+\n+\s+/g, '\n') : ''
     doc.compressed = compress(doc.content)
     buffer.push(doc)
     if (buffer.length === BUFFER_SIZE) {
