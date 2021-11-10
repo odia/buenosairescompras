@@ -103,7 +103,7 @@ export async function search(criteria) {
     if (criteria !== searchingCriteria) {
       return
     }
-    searchResults.push(await prepareSearchResults(searchResultsSorted[i]))
+    searchResults.push(await prepareSearchResults(searchResultsSorted[i], criteria))
   }
   setTimeout(() => {
     if (criteria !== searchingCriteria) {
