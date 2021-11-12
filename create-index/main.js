@@ -19,7 +19,9 @@ const urls = []
 
 console.log('Generating index...')
 const numBytes = fs.statSync(PATH).size;
-const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+const progressBar = new cliProgress.SingleBar({
+  etaBuffer: 1000, // this seems to be ignored for some reason?
+}, cliProgress.Presets.shades_classic);
 progressBar.start(numBytes, 0)
 
 fs.createReadStream(PATH)
