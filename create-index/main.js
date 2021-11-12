@@ -10,18 +10,11 @@ const range = function*(from,to) {
     for(let i = from; i < to; i++) yield i;
 };
 
-const BUFFER_SIZE = 1000;
 const PATH = process.argv[2] === 'sample' ? '../data/sample.csv' : '../data/releases_documents_items.csv'
 const minisearches = [...range(0, NUM_MINISEARCH)].map(() => new MiniSearch(MS_CONFIG))
 
 const urls = []
-let buffer = []
 let i = 0
-const addDocuments = () => {
-  minisearches[i++ % NUM_MINISEARCH].addAll(buffer)
-  buffer = []
-  process.stderr.write(`writing to bucket ${i}\n`)
-}
 
 fs.createReadStream(PATH)
   .pipe(csvparse({ columns: true }))
@@ -40,13 +33,9 @@ fs.createReadStream(PATH)
     doc.id = doc['tender/documents/0/url']
     doc.content = relevant ? relevant.text.toString().replace(/\s+\n+\s+/g, '\n') : ''
     doc.compressed = compress(doc.content)
-    buffer.push(doc)
-    if (buffer.length === BUFFER_SIZE) {
-      addDocuments()
-    }
+    minisearches[i++ % NUM_MINISEARCH].add(doc)
   })
   .on('end', async () => {
-    addDocuments()
     const sizes = []
     await Promise.all(minisearches.map(async (ms, i) => {
       const str = JSON.stringify(ms.toJSON())
