@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cli-progress": "^3.9.1",
     "csv-parse": "^4.16.3",
     "lz-string": "^1.4.4",
     "minisearch": "^3.1.0",
