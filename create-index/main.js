@@ -7,7 +7,7 @@ const MiniSearch = require('minisearch')
 const { MS_CONFIG, COLS, NUM_MINISEARCH } = require('bac-shared')
 
 const range = function*(from,to) {
-    for(let i = from; i <= to; i++) yield i;
+    for(let i = from; i < to; i++) yield i;
 };
 
 const BUFFER_SIZE = 1000;
