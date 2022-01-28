@@ -4,18 +4,20 @@ import selectors from './selectors';
 const EventEmitter = require('events');
 const debug = require('debug')('puppet');
 
-const BROWSERLESS_HOST = process.env.BROWSERLESS_HOST || 'localhost';
-const BROWSERLESS_PORT = process.env.BROWSERLESS_PORT || '3000';
-const BASE_URL = process.env.BASE_URL || 'https://www.buenosairescompras.gob.ar'
-
 export default class Runner extends EventEmitter {
+  config: {
+    BROWSERLESS_HOST: string;
+    BROWSERLESS_PORT: string;
+    BASE_URL: string;
+  };
   target: string;
   browser: Browser | undefined;
   page: Page | undefined;
 
-  constructor() {
+  constructor(config) {
     super();
-    this.target = `ws://${BROWSERLESS_HOST}:${BROWSERLESS_PORT}`;
+    this.target = `ws://${config.BROWSERLESS_HOST}:${config.BROWSERLESS_PORT}`;
+    this.config = config;
     debug(`will connect to ${this.target}`);
   }
   close() {
@@ -73,7 +75,7 @@ will try to spawn a chromedriver instance for you to debug`)
       return null;
     }
 
-    await this.page.goto(`${BASE_URL}`, {
+    await this.page.goto(`${this.config.BASE_URL}`, {
       waitUntil: 'networkidle2'
     })
     /* required as browsing directly seems to fail */
