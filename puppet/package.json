@@ -1,0 +1,29 @@
+{
+  "name": "puppet",
+  "version": "0.1.0",
+  "homepage": "https://bac.odia.legal/",
+  "private": true,
+  "dependencies": {
+    "@types/node": "^12.0.0",
+    "debug": "^4.3.3",
+    "puppeteer": "^13.1.2",
+    "puppeteer-core": "^13.1.2",
+    "ts-node": "^10.4.0"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.4",
+    "typescript": "^4.1.2"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
