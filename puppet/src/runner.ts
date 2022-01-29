@@ -67,6 +67,25 @@ export default class Runner extends EventEmitter {
     return p;
   }
 
+  async gotoPage(p) {
+    const pagePostBack = `__doPostBack('ctl00$CPH1$GridListaPliegos','Page$${p}')`;
+
+    const pages = await this.page.evaluate(sel => {
+      const ret = [];
+      document.querySelectorAll(sel).forEach(d => {
+        ret.push(d.getAttribute('href'))
+      })
+      return ret;
+    }, selectors.PAGES_LIST_HACK);
+
+    if (new Set(pages).has(`javascript:${pagePostBack}`)) {
+      await this.page.evaluate(pagePostBack);
+      return true;
+    }
+
+    debug(`${pagePostBack} not found, returning false`)
+    return false;
+  }
   public async run() {
     await this.connect();
 
@@ -80,15 +99,15 @@ export default class Runner extends EventEmitter {
     })
     /* required as browsing directly seems to fail */
     await this.page.click(selectors.LAST_DAYS_A);
-    for (let i = 2; i < 20; i++) {
+    let p = 1;
+    do {
       await this.page.waitForSelector(selectors.LIST_PROCESSES);
 
       const count = await this.page.evaluate((sel) =>
         document.querySelectorAll(sel).length, selectors.LIST_PROCESSES);
 
       for (let l = 0; l < count; l++) {
-        debug(`page: ${i - 1}\tlink: ${l + 1}/${count}`);
-        /* old links was destroyed on nav */
+        debug(`page: ${p}\tlink: ${l + 1}/${count}`);
         const links = await this.page.$$('a[href*=lnkNumeroProceso]');
 
         links[l].click();
@@ -101,10 +120,9 @@ export default class Runner extends EventEmitter {
         this.process(data);
         this.page.goBack();
         await this.page.waitForSelector(selectors.LIST_PROCESSES);
-      };
+      }
+    } while (await this.gotoPage(++p));
 
-      await this.page.evaluate(`__doPostBack('ctl00$CPH1$GridListaPliegos','Page$${i}')`)
-    }
     this.emit("done");
   }
 }
