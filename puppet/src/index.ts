@@ -12,7 +12,7 @@ puppet.on('data', d => {
   const nump = d.VistaPreviaPliego.CabeceraPliego.NumPliego;
   writeFile(`${__dirname}/../data/${nump}.json`,
     JSON.stringify(d, null, 2), err => {
-      if (err) return console.error(`couldn't write file data/${nump}.json`);
+      if (err) return console.error(`couldn't write file data/${nump}.json: ${err}`);
       console.log(`wrote data/${nump}.json`);
 
     })
