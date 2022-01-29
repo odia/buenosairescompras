@@ -1,5 +1,5 @@
 FROM node:alpine as build
-    MAINTAINER Niv Sardi <x@filtra.me>
+MAINTAINER Niv Sardi <x@filtra.me>
 WORKDIR /app
 
 ENV PATH /app/node_modules/.bin:$PATH
