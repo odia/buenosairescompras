@@ -4,7 +4,9 @@ WORKDIR /app
 
 ENV PATH /app/node_modules/.bin:$PATH
 COPY package.json tsconfig.json run.sh ./
-COPY src ./src
-RUN yarn
 RUN chmod +x run.sh
+
+RUN yarn
+
+COPY src ./src
 CMD ./run.sh
