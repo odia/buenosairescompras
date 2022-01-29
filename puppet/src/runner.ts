@@ -27,8 +27,8 @@ export default class Runner extends EventEmitter {
     this.browser = this.browser || await require('puppeteer').connect({ browserWSEndpoint: this.target })
       .catch(() => {
         debug(`
-COULD NOT CONNECT TO BROWSERLESS
-will try to spawn a chromedriver instance for you to debug`)
+⚠ COULD NOT CONNECT TO BROWSERLESS
+🦄 will try to spawn a chromedriver instance for you to debug`)
         return require('puppeteer').launch({
           headless: false
         })
