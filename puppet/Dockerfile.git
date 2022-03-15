@@ -6,4 +6,4 @@ RUN apk add git
 COPY run-forever.sh ./
 RUN chmod +x run-forever.sh
 
-CMD ./run-forver.sh 12h 'git add * && git commit -asm "autocommit $(date)"'
+CMD ./run-forever.sh 12h 'git add * && git commit -asm "autocommit $(date)"'

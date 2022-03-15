@@ -13,12 +13,23 @@ export default class Runner extends EventEmitter {
   target: string;
   browser: Browser | undefined;
   page: Page | undefined;
+  state: {
+    page: number,
+    link: number,
+    currentPage: number
+  }
 
   constructor(config) {
     super();
     this.target = `ws://${config.BROWSERLESS_HOST}:${config.BROWSERLESS_PORT}`;
     this.config = config;
+    this.state = {
+      page: 1,
+      link: 1,
+      currentPage: 1
+    }
     debug(`will connect to ${this.target}`);
+    this.watchdog = setInterval (() => console.error ('WATCHDOG', this.browser, this.page), 20000)
   }
   close() {
     if (this.browser) this.browser.close();
@@ -37,7 +48,36 @@ export default class Runner extends EventEmitter {
       debug("couldn't init Browser");
       return null;
     };
-    this.page = this.page || await this.browser.newPage();
+    ;['disconnected', 'targetchanged', 'targetcreated', 'targetdestroyed'].map(e => this.browser.on(e, d => this.emit(`browser:${e}`, d)))
+
+    if (!this.page) {
+      const pages = await this.browser.pages();
+      if (pages.length) {
+        this.page = pages[0]
+      } else
+        this.page = await this.browser.newPage();
+    }
+
+    ;[
+      'close',
+      'console',
+      'dialog',
+      'domcontentloaded',
+      'error',
+      'frameattached',
+      'framedetached',
+      'framenavigated',
+      'load',
+      'metrics',
+      'pageerror',
+      'popup',
+      'request',
+      'requestfailed',
+      'requestfinished',
+      'response',
+      'workercreated',
+      'workerdestroyed',
+    ].map(e => this.browser.on(e, d => this.emit (`page:${e}`, d)))
     this.emit("ready")
   }
   async wait() {
@@ -67,8 +107,20 @@ export default class Runner extends EventEmitter {
     return p;
   }
 
+  pageToPostBack (p) {
+    return `__doPostBack('ctl00$CPH1$GridListaPliegos','Page$${p}')`;
+  }
   async gotoPage(p) {
-    const pagePostBack = `__doPostBack('ctl00$CPH1$GridListaPliegos','Page$${p}')`;
+    const pagePostBack = this.pageToPostBack(p);
+
+    /* hack to enter on first page */
+    if (this.state.currentPage === p) {
+      return true;
+    }
+
+    if (Math.abs (p - this.state.currentPage) > 9) {
+      this.gotoPage(this.state.currentPage + 9)
+    }
 
     const pages = await this.page.evaluate(sel => {
       const ret = [];
@@ -80,6 +132,7 @@ export default class Runner extends EventEmitter {
 
     if (new Set(pages).has(`javascript:${pagePostBack}`)) {
       await this.page.evaluate(pagePostBack);
+      this.state.currentPage = p
       return true;
     }
 
@@ -94,23 +147,26 @@ export default class Runner extends EventEmitter {
       return null;
     }
 
+    this.state.currentPage = 1;
     await this.page.goto(`${this.config.BASE_URL}`, {
       waitUntil: 'networkidle2'
     })
     /* required as browsing directly seems to fail */
     await this.page.click(selectors.LAST_DAYS_A);
-    let p = 1;
-    do {
-      await this.page.waitForSelector(selectors.LIST_PROCESSES);
 
+    console.error (this.state);
+    while (await this.gotoPage(this.state.page)) {
+      console.error ('2', this.state);
+      await this.page.waitForSelector(selectors.LIST_PROCESSES);
       const count = await this.page.evaluate((sel) =>
         document.querySelectorAll(sel).length, selectors.LIST_PROCESSES);
 
-      for (let l = 0; l < count; l++) {
-        debug(`page: ${p}\tlink: ${l + 1}/${count}`);
+      for (; this.state.link <= count; this.state.link++) {
+
+        debug(`page: ${this.state.page}\tlink: ${this.state.link}/${count}`);
         const links = await this.page.$$('a[href*=lnkNumeroProceso]');
 
-        links[l].click();
+        links[this.state.link - 1].click();
         await this.page.waitForSelector(selectors.LIST_FIELDS);
         const data = [];
         const fields = await this.page.$$(selectors.LIST_FIELDS);
@@ -121,7 +177,10 @@ export default class Runner extends EventEmitter {
         this.page.goBack();
         await this.page.waitForSelector(selectors.LIST_PROCESSES);
       }
-    } while (await this.gotoPage(++p));
+
+      this.state.link = 1;
+      this.state.page++;
+    }
 
     this.emit("done");
   }

@@ -17,7 +17,15 @@ puppet.on('data', d => {
 
     })
 });
+
+puppet.on('disconnected', () => {
+  console.error(`reconnecting, at ${puppet.state}`);
+  puppet.connect();
+})
+
 puppet.on('done', () => {
+  console.error('done')
   puppet.close();
 });
+
 puppet.run();
