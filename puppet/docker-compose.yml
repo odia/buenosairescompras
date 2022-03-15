@@ -12,7 +12,7 @@ services:
       - "browserless"
     command: "./run.sh"
     volumes:
-      - "./data:/app/data"
+      - "./data:/app/data:Z"
 
   browserless:
     image: chrome
