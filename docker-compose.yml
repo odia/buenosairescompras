@@ -39,3 +39,12 @@ services:
       - "puppet"
     volumes:
       - "./data:/app/data:z"
+
+  bot:
+    build:
+      dockerfile: telegram/Dockerfile
+    env: telegram/.env
+    depends_on:
+      - "puppet"
+    volumes:
+      - "./data:/app/data:z"
