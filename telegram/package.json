@@ -1,0 +1,16 @@
+{
+  "name": "bacbot",
+  "version": "0.0.1",
+  "description": "A telegram bot to publish bac data",
+  "main": "index.ts",
+  "author": "Niv Sardi",
+  "license": "GPLv3",
+  "dependencies": {
+    "telegraf": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.21",
+    "tslint": "^6.1.3",
+    "typescript": "^4.6.2"
+  }
+}
