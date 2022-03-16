@@ -1,3 +1,3 @@
 #!/bin/sh
 
-/app/node_modules/.bin/ts-node /app/src/index.ts
+./node_modules/.bin/ts-node ./src/index.ts

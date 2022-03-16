@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "homepage": "https://bac.odia.legal/",
   "private": true,
+  "scripts": {
+    "start": "sh ./run.sh"
+  },
   "dependencies": {
     "@types/node": "^12.0.0",
     "debug": "^4.3.3",
