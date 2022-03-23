@@ -2,13 +2,14 @@ version: "3.9"  # optional since v1.27.0
 services:
   puppet:
     build:
-      dockerfile: puppet/Dockerfile.puppet
+      dockerfile: Dockerfile.puppet
+      context: puppet
     links:
       - browserless
     environment:
       - BROWSERLESS_HOST=browserless
       - BROWSERLESS_PORT=3000
-      - DEBUG="*"
+      - DEBUG="puppet"
     depends_on:
       - "browserless"
     cap_add:
@@ -30,7 +31,8 @@ services:
 
   git:
     build:
-      dockerfile: puppet/Dockerfile.git
+      dockerfile: Dockerfile.git
+      context: puppet
     environment:
       GIT_AUTHOR_NAME: "O.D.I.A. Automaton"
       GIT_AUTHOR_EMAIL: "bot@odia.legal"
@@ -42,7 +44,7 @@ services:
 
   bot:
     build:
-      dockerfile: telegram/Dockerfile
+      context: telegram
     env: telegram/.env
     depends_on:
       - "puppet"
