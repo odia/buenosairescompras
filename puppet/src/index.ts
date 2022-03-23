@@ -1,6 +1,8 @@
 import Runner from './runner';
 import { writeFile } from 'fs';
 
+const path = require('path');
+
 const puppet = new Runner({
   BROWSERLESS_HOST: process.env.BROWSERLESS_HOST || "localhost",
   BROWSERLESS_PORT: process.env.BROWSERLESS_PORT || "3000",
@@ -16,15 +18,24 @@ const z = (d, n=2) => {
 }
 
 puppet.on('data', d => {
-    const nump = d.VistaPreviaPliego.CabeceraPliego.NumPliego;
-  const [_, D,M,Y,H] = d.VistaPreviaPliego.Cronograma.FechaPublicacion.match(/(\d+)\/(\d+)\/(\d+) (.*)/);
-  const sdate = `${Y}${z(M)}${z(D)}_${H}`;
-  writeFile(`${__dirname}/../data/${sdate}_${nump}.json`,
+  const nump = d.VistaPreviaPliego.CabeceraPliego.NumPliego;
+
+  try {
+    const [_, D,M,Y,H] = d.VistaPreviaPliego.Cronograma.FechaPublicacion
+                          .match(/(\d+)\/(\d+)\/(\d+) (.*)/);
+    const sdate = `${Y}${z(M)}${z(D)}_${H}`;
+    const fn = path.resolve(`${__dirname}/../../data/${sdate}_${nump}.json`)
+    writeFile(fn,
             JSON.stringify(d, null, 2), err => {
               if (err) return console.error(`couldn't write file data/${nump}.json: ${err}`);
-      console.log(`wrote data/${nump}.json`);
+              console.log(`wrote ${fn}`);
 
     })
+  } catch(e) {
+    console.error(d);
+  }
+
+
 });
 
 puppet.on('disconnected', () => {
