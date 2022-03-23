@@ -29,7 +29,7 @@ export default class Runner extends EventEmitter {
       currentPage: 1
     }
     debug(`will connect to ${this.target}`);
-    this.watchdog = setInterval (() => console.error ('WATCHDOG', this.browser, this.page), 20000)
+
   }
   close() {
     if (this.browser) this.browser.close();
@@ -154,9 +154,9 @@ export default class Runner extends EventEmitter {
     /* required as browsing directly seems to fail */
     await this.page.click(selectors.LAST_DAYS_A);
 
-    console.error (this.state);
+    const failed = [];
+
     while (await this.gotoPage(this.state.page)) {
-      console.error ('2', this.state);
       await this.page.waitForSelector(selectors.LIST_PROCESSES);
       const count = await this.page.evaluate((sel) =>
         document.querySelectorAll(sel).length, selectors.LIST_PROCESSES);
@@ -167,13 +167,19 @@ export default class Runner extends EventEmitter {
         const links = await this.page.$$('a[href*=lnkNumeroProceso]');
 
         links[this.state.link - 1].click();
-        await this.page.waitForSelector(selectors.LIST_FIELDS);
-        const data = [];
-        const fields = await this.page.$$(selectors.LIST_FIELDS);
-        for (let f in fields) {
-          data.push(await fields[f].evaluate(node => [node.id, (node as HTMLElement).innerText]))
+        try {
+          await this.page.waitForSelector(selectors.LIST_FIELDS);
+          const data = [];
+          const fields = await this.page.$$(selectors.LIST_FIELDS);
+          for (let f in fields) {
+            data.push(await fields[f].evaluate(node => [node.id, (node as HTMLElement).innerText]))
+          }
+          this.process(data);
+        } catch (e) {
+          failed.push(Object.assign({}, this.state));
+          console.error(e);
         }
-        this.process(data);
+
         this.page.goBack();
         await this.page.waitForSelector(selectors.LIST_PROCESSES);
       }
@@ -182,6 +188,7 @@ export default class Runner extends EventEmitter {
       this.state.page++;
     }
 
+    console.error("failed", failed);
     this.emit("done");
   }
 }
