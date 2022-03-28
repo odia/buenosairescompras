@@ -19,15 +19,18 @@ services:
       - SYS_ADMIN
     command: "./run-forever.sh 12h ./run.sh"
     volumes:
-      - "./data:/app/data:z"
+      - "./data:/data:z"
 
   browserless:
-    image: docker.io/browserless/chrome
-    environment:
-      - PREBOOT_CHROME=true
-      - MAX_CONCURRENT_SESSIONS=1
-      - KEEP_ALIVE=1
-      - CONNECTION_TIMEOUT=60000
+     image: docker.io/zenika/alpine-chrome
+     command: "chrome --no-sandbox --remote-debugging-address=0.0.0.0 --remote-debugging-port=3000"
+     port:
+       - "3000:3000"
+     environment:
+       - PREBOOT_CHROME=true
+       - MAX_CONCURRENT_SESSIONS=1
+       - KEEP_ALIVE=1
+       - CONNECTION_TIMEOUT=60000
 
   git:
     build:
@@ -36,17 +39,17 @@ services:
     environment:
       GIT_AUTHOR_NAME: "O.D.I.A. Automaton"
       GIT_AUTHOR_EMAIL: "bot@odia.legal"
-    command: "./run-forever.sh 12h 'cd data && git add * && git commit -asm \"autocommit $(date)\"'"
+    command: "./run-forever.sh 12h 'cd /data && git add . && git commit -asm \"autocommit \"'"
     depends_on:
       - "puppet"
     volumes:
-      - "./data:/app/data:z"
+      - "./data:/data:z"
 
   bot:
     build:
       context: telegram
-    env: telegram/.env
+    env_file: telegram/.env
     depends_on:
       - "puppet"
     volumes:
-      - "./data:/app/data:z"
+      - "./data:/data:z"
