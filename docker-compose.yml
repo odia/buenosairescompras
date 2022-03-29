@@ -1,4 +1,6 @@
 version: "3.9"  # optional since v1.27.0
+environment:
+  RUN_TIME: "1h"
 services:
   puppet:
     build:
@@ -7,30 +9,20 @@ services:
     links:
       - browserless
     environment:
-      - BROWSERLESS_HOST=browserless
-      - BROWSERLESS_PORT=3000
-      - DEBUG="puppet"
+      BROWSERLESS_HOST: browserless
+      BROWSERLESS_PORT: 3000
+      DEBUG: "puppet"
     depends_on:
       - "browserless"
-    cap_add:
-      - ALL
-    cap_drop:
-      - NET_ADMIN
-      - SYS_ADMIN
-    command: "./run-forever.sh 12h ./run.sh"
+    command: "./run-forever.sh 1h ./run.sh"
     volumes:
       - "./data:/data:z"
 
   browserless:
      image: docker.io/zenika/alpine-chrome
-     command: "chrome --no-sandbox --remote-debugging-address=0.0.0.0 --remote-debugging-port=3000"
+     entrypoint: ["sh", "-c", "while true; do chromium-browser --headless --use-gl=swiftshader --disable-software-rasterizer --disable-dev-shm-usage --no-sandbox --remote-debugging-address=0.0.0.0 --remote-debugging-port=3000; sleep 2; done"]
      port:
        - "3000:3000"
-     environment:
-       - PREBOOT_CHROME=true
-       - MAX_CONCURRENT_SESSIONS=1
-       - KEEP_ALIVE=1
-       - CONNECTION_TIMEOUT=60000
 
   git:
     build:
@@ -39,7 +31,7 @@ services:
     environment:
       GIT_AUTHOR_NAME: "O.D.I.A. Automaton"
       GIT_AUTHOR_EMAIL: "bot@odia.legal"
-    command: "./run-forever.sh 12h 'cd /data && git add . && git commit -asm \"autocommit \"'"
+    command: "./run-forever.sh 1h 'cd /data && git add . && git commit -asm \"autocommit \"'"
     depends_on:
       - "puppet"
     volumes:
